@@ -33,7 +33,7 @@ pub fn msm(points: []const P256, scalrs: []const Scalar) P256 {
 
         // result = result * 2^WINDOW_SIZE
         for (0..WINDOW_SIZE) |_| {
-            result = result.add(result);
+            result = result.dbl();
         }
 
         for (points, scalrs) |p, s| {
@@ -42,7 +42,7 @@ pub fn msm(points: []const P256, scalrs: []const Scalar) P256 {
 
             // If the window value is not zero, add the point to the corresponding bucket
             if (digit != 0) {
-                buckets[digit] = buckets[digit].add(p);
+                buckets[digit] = if (buckets[digit].z.isZero()) p else buckets[digit].add(p);
             }
         }
 
@@ -77,7 +77,7 @@ pub fn msmAffine(points: []const AffineCoordinates, scalrs: []const Scalar) P256
 
         // result = result * 2^WINDOW_SIZE
         for (0..WINDOW_SIZE) |_| {
-            result = result.add(result);
+            result = result.dbl();
         }
 
         for (points, scalrs) |p, s| {
@@ -86,7 +86,10 @@ pub fn msmAffine(points: []const AffineCoordinates, scalrs: []const Scalar) P256
 
             // If the window value is not zero, add the point to the corresponding bucket
             if (digit != 0) {
-                buckets[digit] = buckets[digit].addMixed(p);
+                buckets[digit] = if (buckets[digit].z.isZero() and !p.x.isZero())
+                    .{ .x = p.x, .y = p.y }
+                else
+                    buckets[digit].addMixed(p);
             }
         }
 
