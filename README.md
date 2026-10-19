@@ -1,7 +1,9 @@
 # Nist P256 Elliptic Curve MSM Algorithm
 
 
-You should have Zig (v0.16.0), and then execute it. If you architecture is `x86_64` and CPU has `AVX512-IFMA` extension, the SIMD option will enabled by default.
+You should have Zig (v0.16.0), and then execute it.
+
+If you architecture is `x86_64` and CPU has `AVX512-IFMA` extension, the SIMD option will enabled by default.
 
 ```bash
 zig build run -Doptimize=ReleaseFast
