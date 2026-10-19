@@ -2,11 +2,16 @@
 const std = @import("std");
 const Io = std.Io;
 
-const assert = std.debug.assert;
-
+pub const simd = @import("msm_simd.zig");
 pub const P256 = std.crypto.ecc.P256;
 pub const AffineCoordinates = @TypeOf(P256.basePoint.affineCoordinates());
 pub const Scalar = [32]u8;
+
+const assert = std.debug.assert;
+/// SIMD variants of the MSM functions. These are only available if the target architecture supports SIMD instructions.
+pub const msmSimd = simd.msm;
+/// SIMD variants of the MSM functions for affine coordinates. These are only available if the target architecture supports SIMD instructions.
+pub const msmAffineSimd = simd.msm;
 
 /// The window size for the MSM algorithm.
 /// A larger window size will result in fewer iterations,
@@ -173,4 +178,18 @@ test "msm variants match the sum of scalar multiplications" {
     );
     try std.testing.expect(msm(&points, &scalars).equivalent(expected));
     try std.testing.expect(msmAffine(&point_affines, &scalars).equivalent(expected));
+}
+
+test "public entry points agree when automatic SIMD dispatch is used" {
+    const size = 129;
+    const points = [_]P256{P256.basePoint} ** size;
+    const affines = [_]AffineCoordinates{P256.basePoint.affineCoordinates()} ** size;
+    var one = [_]u8{0} ** 32;
+    one[0] = 1;
+    const scalars = [_]Scalar{one} ** size;
+    var count = [_]u8{0} ** 32;
+    count[0] = size;
+    const expected = try P256.basePoint.mul(count, .little);
+    try std.testing.expect(msm(&points, &scalars).equivalent(expected));
+    try std.testing.expect(msmAffine(&affines, &scalars).equivalent(expected));
 }
