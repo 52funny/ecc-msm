@@ -92,16 +92,16 @@ test "SIMD MSM matches scalar multiplication for tails, identities and all scala
     var affines: [size]AffineCoordinates = undefined;
     var scalars: [size]Scalar = undefined;
     for (&points, &affines, &scalars, 0..) |*p, *affine, *s, i| {
-        var scalar = [_]u8{0} ** 32;
+        var scalar: Scalar = @splat(0);
         scalar[0] = @intCast(i + 1);
         p.* = if (i % 17 == 0) P256.identityElement else try P256.basePoint.mul(scalar, .little);
         affine.* = p.affineCoordinates();
         random.bytes(s);
     }
-    scalars[0] = [_]u8{0xff} ** 32;
-    scalars[1] = [_]u8{0xff} ** 32;
-    scalars[2] = [_]u8{0} ** 32;
-    scalars[3] = [_]u8{0} ** 32;
+    scalars[0] = @splat(0xff);
+    scalars[1] = @splat(0xff);
+    scalars[2] = @splat(0);
+    scalars[3] = @splat(0);
     scalars[3][31] = 0x80;
     std.mem.writeInt(u256, &scalars[4], P256.scalar.field_order, .little);
     points[5] = points[6].neg();
@@ -121,10 +121,10 @@ test "SIMD MSM matches scalar multiplication for tails, identities and all scala
 
     const cancel = [_]P256{ P256.basePoint, P256.basePoint.neg() };
     const cancel_affines = [_]AffineCoordinates{ cancel[0].affineCoordinates(), cancel[1].affineCoordinates() };
-    var cancel_scalars = [_]Scalar{[_]u8{0xff} ** 32} ** 2;
+    var cancel_scalars: [2]Scalar = @splat(@splat(0xff));
     try std.testing.expect(msm(P256, 8, &cancel, &cancel_scalars).equivalent(P256.identityElement));
     try std.testing.expect(msm(AffineCoordinates, 8, &cancel_affines, &cancel_scalars).equivalent(P256.identityElement));
-    @memset(&cancel_scalars, [_]u8{0} ** 32);
+    @memset(&cancel_scalars, @splat(0));
     try std.testing.expect(msm(P256, 8, &cancel, &cancel_scalars).equivalent(P256.identityElement));
     try std.testing.expect(msm(AffineCoordinates, 8, &cancel_affines, &cancel_scalars).equivalent(P256.identityElement));
 }

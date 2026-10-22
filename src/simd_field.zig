@@ -119,7 +119,7 @@ pub const Fe = struct {
 
     /// CIOS Montgomery multiplication, with normalized inputs and output < p.
     pub fn mul(a: Self, b: Self) Self {
-        var t = [_]Vec{@splat(0)} ** 6;
+        var t: [6]Vec = @splat(@splat(0));
         inline for (0..5) |i| {
             inline for (0..5) |j| {
                 t[j] = madd52lo(t[j], a.limbs[j], b.limbs[i]);

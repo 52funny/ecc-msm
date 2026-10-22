@@ -12,9 +12,9 @@ pub const Packed = struct {
     z: field.Limb,
 
     pub const identity = Packed{
-        .x = .{0} ** 5,
+        .x = @splat(0),
         .y = Fe.one.unpack()[0],
-        .z = .{0} ** 5,
+        .z = @splat(0),
     };
 };
 
@@ -169,7 +169,7 @@ test "SIMD complete point additions agree in independent lanes" {
     var packed_q: [8]Packed = undefined;
     var packed_affine_q: [8]Packed = undefined;
     for (0..8) |i| {
-        var s = [_]u8{0} ** 32;
+        var s: [32]u8 = @splat(0);
         s[0] = @intCast(i + 1);
         ps[i] = if (i == 0) P256.identityElement else try P256.basePoint.mul(s, .little);
         qs[i] = switch (i % 4) {

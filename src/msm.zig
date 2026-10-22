@@ -142,7 +142,7 @@ inline fn get_window_value(comptime T: type, scalar: Scalar, window_index: usize
 }
 
 test "window extraction matches a little-endian integer" {
-    const WindowValue = std.meta.Int(.unsigned, WINDOW_SIZE);
+    const WindowValue = @Int(.unsigned, WINDOW_SIZE);
     var scalar: Scalar = undefined;
     for (&scalar, 0..) |*byte, i| {
         byte.* = @truncate(i * 73 + 0xab);
@@ -166,7 +166,7 @@ test "msm variants match the sum of scalar multiplications" {
         points[0].affineCoordinates(),
         points[1].affineCoordinates(),
     };
-    var scalars = [_]Scalar{[_]u8{0} ** 32} ** 2;
+    var scalars: [2]Scalar = @splat(@splat(0));
     scalars[0][0] = 1;
     for (&scalars[1], 0..) |*byte, i| {
         byte.* = @truncate(i * 73 + 0xab);
@@ -182,12 +182,12 @@ test "msm variants match the sum of scalar multiplications" {
 
 test "public entry points agree when automatic SIMD dispatch is used" {
     const size = 129;
-    const points = [_]P256{P256.basePoint} ** size;
-    const affines = [_]AffineCoordinates{P256.basePoint.affineCoordinates()} ** size;
-    var one = [_]u8{0} ** 32;
+    const points: [size]P256 = @splat(P256.basePoint);
+    const affines: [size]AffineCoordinates = @splat(P256.basePoint.affineCoordinates());
+    var one: Scalar = @splat(0);
     one[0] = 1;
-    const scalars = [_]Scalar{one} ** size;
-    var count = [_]u8{0} ** 32;
+    const scalars: [size]Scalar = @splat(one);
+    var count: Scalar = @splat(0);
     count[0] = size;
     const expected = try P256.basePoint.mul(count, .little);
     try std.testing.expect(msm(&points, &scalars).equivalent(expected));
