@@ -11,14 +11,17 @@ const AffineCoordinates = msm.AffineCoordinates;
 pub fn main(init: std.process.Init) !void {
     const size = 1 << 12;
 
+    var prng = std.Random.DefaultPrng.init(0);
+    var random = prng.random();
+
     var scalars: [size]Scalar = undefined;
     var points: [size]P256 = undefined;
     var point_affines: [size]AffineCoordinates = undefined;
 
     for (&points, &point_affines, &scalars) |*point, *point_affine, *scalar| {
         var s: Scalar = undefined;
-        init.io.random(&(scalar.*));
-        init.io.random(&s);
+        random.bytes(&(scalar.*));
+        random.bytes(&s);
 
         point.* = try P256.basePoint.mul(s, .little);
         point_affine.* = point.*.affineCoordinates();
