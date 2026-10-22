@@ -90,6 +90,27 @@ pub fn build(b: *std.Build) void {
     // by passing `--prefix` or `-p`.
     b.installArtifact(exe);
 
+    // WASM library target for Node.js / Browser interop
+    const wasm_target = b.resolveTargetQuery(.{
+        .cpu_arch = .wasm32,
+        .os_tag = .freestanding,
+    });
+
+    const wasm_lib = b.addExecutable(.{
+        .name = "ecc_msm_wasm",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/wasm.zig"),
+            .target = wasm_target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "ecc_msm", .module = mod },
+            },
+        }),
+    });
+    wasm_lib.entry = .disabled;
+    wasm_lib.rdynamic = true;
+    b.installArtifact(wasm_lib);
+
     // This creates a top level step. Top level steps have a name and can be
     // invoked by name when running `zig build` (e.g. `zig build run`).
     // This will evaluate the `run` step rather than the default step.
